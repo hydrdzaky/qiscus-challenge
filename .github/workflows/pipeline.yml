@@ -17,10 +17,10 @@ jobs:
       - name: Build image
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ ssh.EC2_HOST }}
+          username: ${{ ssh.EC2_USERNAME }}
+          key: ${{ ssh.EC2_PRIVATE_KEY }}
+          port: ${{ ssh.EC2_PORT }}
           script: |
             cd ~/app
             
@@ -34,30 +34,30 @@ jobs:
       - name: run container
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ ssh.EC2_HOST }}
+          username: ${{ ssh.EC2_USERNAME }}
+          key: ${{ ssh.EC2_PRIVATE_KEY }}
+          port: ${{ ssh.EC2_PORT }}
           script: |
             # Run container
             docker run -d \
               --name qiscus-api \
               --restart always \
               -p 3000:3000 \
-              -e DB_USER="${{ secrets.DB_USER }}" \
-              -e DB_HOST="${{ secrets.DB_HOST }}" \
-              -e DB_NAME="${{ secrets.DB_NAME }}" \
-              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-              -e DB_PORT="${{ secrets.DB_PORT }}" \
+              -e DB_USER="${{ database.DB_USER }}" \
+              -e DB_HOST="${{ database.DB_HOST }}" \
+              -e DB_NAME="${{ database.DB_NAME }}" \
+              -e DB_PASSWORD="${{ database.DB_PASSWORD }}" \
+              -e DB_PORT="${{ database.DB_PORT }}" \
               qiscus-api:latest
 
       - name: Show logs
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ ssh.EC2_HOST }}
+          username: ${{ ssh.EC2_USERNAME }}
+          key: ${{ ssh.EC2_PRIVATE_KEY }}
+          port: ${{ ssh.EC2_PORT }}
           script: |            
             # Show logs
             sleep 2
