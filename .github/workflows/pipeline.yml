@@ -1,0 +1,66 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            cd ~/app
+            
+            # Stop old container
+            docker stop qiscus-api || true
+            docker rm qiscus-api || true
+            
+            # Build image
+            docker build -t qiscus-api:latest .
+
+      - name: run container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            # Run container
+            docker run -d \
+              --name qiscus-api \
+              --restart always \
+              -p 3000:3000 \
+              -e DB_USER="${{ secrets.DB_USER }}" \
+              -e DB_HOST="${{ secrets.DB_HOST }}" \
+              -e DB_NAME="${{ secrets.DB_NAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e DB_PORT="${{ secrets.DB_PORT }}" \
+              qiscus-api:latest
+
+      - name: Show logs
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |            
+            # Show logs
+            sleep 2
+            docker logs qiscus-api
+            
+            echo "Deploy successful!"
