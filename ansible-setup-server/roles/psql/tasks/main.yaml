@@ -1,0 +1,33 @@
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install PostgreSQL
+      apt:
+        name: 
+        - postgresql
+        - postgresql-contrib
+        - python3-psycopg2
+        state: present
+
+    - name: Ensure PostgreSQL is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+  
+
+    - name: Create postgresql database
+      become: yes
+      command:
+        cmd: "sudo -u postgres psql -c \"CREATE DATABASE {{ psql_db_name }};\""
+
+    - name: Create postgresql database user
+      become: yes
+      command:
+        cmd: "sudo -u postgres psql -c \"CREATE USER {{ psql_db_user }} WITH PASSWORD '{{ psql_db_password }}';\""
+    
+    - name: Grant privileges to database user
+      become: yes
+      command:
+        cmd: "sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE {{ psql_db_name }} TO {{ psql_db_user }};\""

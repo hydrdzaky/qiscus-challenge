@@ -1,0 +1,9 @@
+- name: "Setup Server (Qiscus Challenge)"
+  hosts: all
+  become: true
+  roles:
+    - setup
+    - nginx
+    - node
+    - docker
+    - psql

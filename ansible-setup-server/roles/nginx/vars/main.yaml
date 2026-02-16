@@ -1,0 +1,4 @@
+http_port: "80"
+
+qiscus_challenge_conf_prod: "candidate-goul.qiscus.me"
+nginx_conf_prod: "{{ qiscus_challenge_conf_prod }}.conf"

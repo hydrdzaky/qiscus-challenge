@@ -1,0 +1,13 @@
+- name: Reload nginx
+  service:
+    name: nginx
+    state: reloaded
+    enabled: yes
+  listen: reload nginx
+
+# Handler untuk restart nginx
+- name: restart nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+  listen: restart nginx

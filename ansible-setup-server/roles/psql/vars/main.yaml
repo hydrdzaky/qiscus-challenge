@@ -1,0 +1,5 @@
+psql_db_name: "qiscus_challenge_db"
+psql_db_user: "qiscus_challenge_user"
+psql_db_password: "admin123"
+psql_db_port: 5432
+psql_db_host: "localhost"

@@ -1,0 +1,100 @@
+---
+# roles/nginx/tasks/main.yml
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Ensure Nginx is started and enabled
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+    
+# - name: Create web root directories
+#   file:
+#     path: "{{ item }}"
+#     owner: www-data
+#     group: www-data
+#     state: directory
+#     mode: "0775"
+#   loop:
+#     - "{{ doc_root_stg }}/public"
+#     - "{{ doc_root_prod }}/public"
+#     - "{{ doc_root_cdn_stg }}"
+#     - "{{ doc_root_cdn_prod }}"
+
+- name: Create web root directories
+  file:
+    path: "/etc/nginx/ssl"
+    state: directory
+    mode: "0775"
+
+#backup existing nginx config
+- name: Backup existing nginx configuration file
+  copy: 
+    src: /etc/nginx/nginx.conf
+    dest: /etc/nginx/nginx.conf.backup
+    remote_src: yes
+    mode: "0644"
+  when: not ansible_check_mode
+
+# Consolidated virtual host deployment
+- name: Deploy nginx prod config
+  template:
+    src: vhost.conf.j2
+    dest: "/etc/nginx/sites-available/{{ nginx_conf_prod }}"
+    mode: "0644"
+  notify: reload nginx
+
+- name: Deploy nginx virtual host configurations
+  template:
+    src: "{{ item.src }}"
+    dest: "/etc/nginx/ssl/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: "qiscus_me_cert_pem.txt.j2", dest: "cert.pem" }
+    - { src: "qiscus_me_key_pem.txt.j2", dest: "key.pem" }
+  notify: reload nginx
+
+# - name: Deploy main nginx configuration file
+#   template: 
+#     src: nginx.conf.j2
+#     dest: /etc/nginx/nginx.conf
+#     mode: "0644"
+#   notify: reload nginx
+#   become: true  
+
+# Enable virtual hosts using nginx_module
+- name: Enable nginx virtual hosts
+  file:
+    src: "/etc/nginx/sites-available/{{ nginx_conf_prod }}"
+    dest: "/etc/nginx/sites-enabled/{{ nginx_conf_prod }}"
+    state: link
+  notify: reload nginx
+
+# - name: Create .htpasswd file with users
+#   community.general.htpasswd:
+#     path: /etc/nginx/.htpasswd
+#     name: "{{ http_auth_user }}"
+#     password: "{{ http_auth_password }}"
+#     owner: root
+#     group: www-data
+#     mode: "0640"
+
+- name: Disable default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+# - name: Enable nginx rewrite module
+#   nginx_module:
+#     name: rewrite
+#     state: present
+#   notify: reload nginx

@@ -1,134 +1,190 @@
-# Node.js API with PostgreSQL and Custom Logging
+Markdown Live Preview
+Reset
+Copy
+Export PDF
 
-This is a simple Node.js application that serves a RESTful API with PostgreSQL integration and custom request logging.
-
-## Features
-
-*   **`/` (GET)**: Checks the database connection status.
-*   **`/api/cities` (GET)**: Fetches data from a PostgreSQL table named `citiess`.
-*   **Custom Logging**: Logs request duration/latency, path, client IP, HTTP method, status code, and HTTP host header for all incoming requests.
-*   **.env for Configuration**: Uses environment variables for sensitive configurations like database credentials and port.
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-*   **Node.js 18+**: [Download & Install Node.js](https://nodejs.org/en/download/)
-*   **npm** (comes with Node.js)
-*   **PostgreSQL 16+**
-
-## Getting Started
-
-Follow these steps to get the project up and running on your local machine.
-
-### 1. Clone the repository
-
-```bash
-git clone <repository_url> # Replace with your repository URL
-cd citiesple-nodejs-api
+138139140141142143144145146147148149150151152153154155156157158159160161162163164165166167168169170171172173174175176177178179180181
+│  │  - Data persistence                                    │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  Managed by Ansible:                                        │
+│  - setup, nginx, node, docker, psql roles                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-This command will install all the necessary packages listed in `package.json` (Express, pg, dotenv).
-
-### 3. Environment Variables Configuration
-
-Create a `.env` file in the root of your project directory (`/home/sya/Documents/Qiscus/citiesple-nodejs-api/.env`). This file will store your database connection details and application port. Replace the placeholder values with your actual PostgreSQL credentials and desired port.
-
-```env
-PORT=3000
-DB_USER=your_username
-DB_HOST=your_host
-DB_NAME=your_database_name
-DB_PASSWORD=your_password
-DB_PORT=5432
-```
-
-### 4. Database Setup
-
-This application will get data from a table named `cities` in your PostgreSQL database. If you don't have one, you can create a simple one for testing purposes. Please see the citiesple in the [init_db.sql](./init_db.sql) file.
+### Traffic Flow
 
 
-### 5. Running the Application
+Tools & Technologies
+Infrastructure & DevOps
+AWS EC2 - Compute instance for application hosting
+Ansible - Infrastructure as Code for automated setup
+Docker - Containerization for consistent deployments
+GitHub Actions - CI/CD pipeline automation
+Web Server & Proxy
+Nginx - Reverse proxy and SSL termination
+OpenSSL - SSL/TLS certificate management
+Application
+Node.js 25 - JavaScript runtime (Alpine 3.22 base)
+npm - Package manager
+Database
+PostgreSQL 14+ - Relational database
+Version Control & CI/CD
+Git/GitHub - Version control
+GitHub Actions - Workflow automation
+appleboy/ssh-action - Remote SSH execution
+Architecture
+System Diagram
+┌─────────────────────────────────────────────────────────────┐
+│                      GitHub Repository                      │
+│                    (main/master branch)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │ git push
+                         ▼
+┌────────────────────────────────────────────────────────────┐
+│                   GitHub Actions CI/CD                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │  Checkout    │→ │  Build Image │→ │ Deploy Container │  │
+│  │   Code       │  │  (Docker)    │  │  & Verify Logs   │  │
+│  └──────────────┘  └──────────────┘  └──────────────────┘  │
+└────────────────────────┬───────────────────────────────────┘
+                         │ SSH + Secrets
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   AWS EC2 Instance                          │
+│                   (Ubuntu 22.04 LTS)                        │
+│                                                             │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │                   Nginx (Port 443)                     │ │
+│  │         Reverse Proxy + SSL Termination                │ │
+│  │     candidate-goul.qiscus.me → /api/cities             │ │
+│  └────────────────────────────────────────────────────────┘ │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │          Docker Container (qiscus-api)                 │ │
+│  │          Node.js App (Port 3000)                       │ │
+│  │                                                        │ │
+│  │  - Express.js API                                      │ │
+│  │  - /api/cities endpoint handler                        │ │
+│  │  - Request processing & logging                        │ │
+│  └────────────────────────────────────────────────────────┘ │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │         PostgreSQL (Port 5432)                         │ │
+│  │                                                        │ │
+│  │  - Database: qiscus_db                                 │ │
+│  │  - User: qiscus_user                                   │ │
+│  │  - Data persistence                                    │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  Managed by Ansible:                                        │
+│  - setup, nginx, node, docker, psql roles                   │
+└─────────────────────────────────────────────────────────────┘
+Traffic Flow
+User Request
+    ↓
+HTTPS (Port 443)
+    ↓
+Nginx Reverse Proxy
+    ├─ SSL Termination
+    └─ Route: /api/cities → localhost:3000
+    ↓
+Docker Container (localhost:3000)
+    ├─ Node.js Application
+    └─ Handle /api/cities request
+    ↓
+PostgreSQL Database
+    ├─ Query execution
+    └─ Return data
+    ↓
+Response ← Application ← Nginx ← User
+🔄 Deployment Flow
+Code Push (main/master branch)
+        ↓
+GitHub Actions Triggered
+        ↓
+Checkout Code
+        ↓
+SSH to EC2
+        ↓
+Build Docker Image
+        ↓
+Stop Old Container
+        ↓
+Run New Container
+        ↓
+View Logs
+        ↓
+✅ Deployment Complete
+Quick Start
+1️⃣ Infrastructure Setup (Ansible)
+cd ansible-setup-server
 
-To start the application, use one of the following commands:
+# Update inventory with your EC2 IP
+nano inventory.ini
 
-#### Development Mode (with Nodemon)
+# Run playbook
+ansible-playbook -i inventory.ini playbook.yml -v
+Installs: ✅ Node.js 25
+✅ Docker Engine
+✅ PostgreSQL 14+
+✅ Nginx with SSL
 
-This mode uses `nodemon` to automatically restart the server whenever code changes are detected.
+2️⃣ Configure GitHub Secrets
+gh secret set EC2_HOST --body "YOUR_EC2_PUBLIC_IP"
+gh secret set EC2_USERNAME --body "ubuntu"
+gh secret set EC2_PRIVATE_KEY < ~/.ssh/your_key.pem
+gh secret set EC2_PORT --body "22"
+gh secret set DB_USER --body "qiscus_user"
+gh secret set DB_HOST --body "localhost"
+gh secret set DB_NAME --body "qiscus_db"
+gh secret set DB_PASSWORD --body "your_secure_password"
+gh secret set DB_PORT --body "5432"
+3️⃣ Deploy Application
+# Just push your code
+git push origin main
 
-```bash
-npm run dev
-```
-
-#### Using Docker in Development Mode
-
-```bash
-docker compose up -d --build
-```
-
-Once the server is running, you will see a message like:
-
-```
-Server running on port 3000
-```
-
-## API Endpoints
-
-*   **GET /**
-    *   **Description**: Checks if the application can successfully connect to the PostgreSQL database.
-    *   **Response**: 
-        ```json
-        {
-            "message": "Database connection successful",
-            "status": "OK"
-        }
-        ```
-        or in case of error:
-        ```json
-        {
-            "message": "Database connection failed",
-            "status": "Error",
-            "error": "<error_message>"
-        }
-        ```
-
-*   **GET /api/cities**
-    *   **Description**: Retrieves all entries from the `cities` table.
-    *   **Response**: An array of cities objects.
-        ```json
-        [
-            {
-                "id": 1,
-                "state": "California",
-                "country": "USA",
-                "city_name": "Los Angeles"
-            },
-            {
-                "id": 2,
-                "state": "New York",
-                "country": "USA",
-                "city_name": "New York City"
-            }
-        ]
-        ```
-        or in case of error:
-        ```json
-        {
-            "message": "Error fetching cities data",
-            "error": "<error_message>"
-        }
-        ```
-
-## Logging
-
-When you make a request to any endpoint, you will see a log entry in your console similar to this:
-
-```
-{"timestamp":"2026-01-29T04:28:39.952Z","method":"GET","url":"/favicon.ico","clientIp":"::ffff:172.19.0.1","host":"localhost:3000","status":404,"durationMs":0.378,"userAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"}
-```
+# GitHub Actions automatically:
+# 1. Builds Docker image
+# 2. Deploys to EC2
+# 3. Shows logs
+4️⃣ Access Application
+https://candidate-goul.qiscus.me/api/cities
+Directory Structure
+qiscus-api/
+├── ansible-setup-server/          # Infrastructure setup
+│   ├── inventory.ini              # EC2 hosts
+│   ├── playbook.yml               # Main playbook
+│   └── roles/                     # Setup roles
+│       ├── setup/
+│       ├── nginx/
+│       ├── node/
+│       ├── docker/
+│       └── psql/
+├── .github/workflows/
+│   └── pipeline.yml               # GitHub Actions CI/CD
+├── Dockerfile                     # Container definition
+├── package.json
+├── app.js                         # Main application
+├── init_db.sql                    # Database initialization
+└── README.md                      # This file
+Directory Structure
+qiscus-api/
+├── ansible-setup-server/          # Infrastructure setup
+│   ├── inventory.ini              # EC2 hosts
+│   ├── playbook.yml               # Main playbook
+│   └── roles/                     # Setup roles
+│       ├── setup/
+│       ├── nginx/
+│       ├── node/
+│       ├── docker/
+│       └── psql/
+├── .github/workflows/
+│   └── pipeline.yml               # GitHub Actions CI/CD
+├── Dockerfile                     # Container definition
+├── package.json
+├── app.js                         # Main application
+├── init_db.sql                    # Database initialization
+└── README.md                      # This file
